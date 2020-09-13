@@ -6,9 +6,15 @@
  *
  */
 
+#include "Load.hpp"
+#include "data_path.hpp"
+#include "read_write_chunk.hpp"
+
 #include <glm/glm.hpp>
 #include <array>
+#include <vector>
 #include <iostream>
+#include <fstream>
 
 struct PPU466 {
 	PPU466();
@@ -54,7 +60,7 @@ struct PPU466 {
 
 	//Palette Table:
 	// The PPU stores 8 palettes for use when drawing tiles:
-	std::array< Palette, PaletteTableNum > palette_table;
+	inline static std::vector< Palette > palette_table {};
 
 	static void DebugPrintPalette(const glm::u8vec4* palette) {
 		for (int i = 0; i < PaletteColorNum; ++i) {
@@ -101,7 +107,7 @@ struct PPU466 {
 	//Tile Table:
 	// The PPU has a 256-tile 'pattern memory' in which tiles are stored:
 	//  this is often thought of as a 16x16 grid of tiles.
-	std::array< Tile, TileTableWidth * TileTableHeight > tile_table;
+	inline static std::vector< Tile > tile_table {};
 
 	static void SetTilePixel(Tile& tile, int x, int y, uint8_t color_idx) {
 		uint8_t bit0 = color_idx & 1;
@@ -211,3 +217,25 @@ struct PPU466 {
 	std::array< Sprite, 64 > sprites;
 
 };
+
+inline Load<void> load_tilemap { LoadTagDefault, []() {
+	std::string path(data_path("../assets/tiles.tile"));
+	std::ifstream tilemap_file(path);
+	if (!tilemap_file.is_open()) {
+		throw std::runtime_error("Cannot open tilemap file " + path);
+	}
+
+	read_chunk(tilemap_file, "tile", &PPU466::tile_table);
+	PPU466::DebugPrintTileMap(PPU466::tile_table.data(), 10);
+} };
+
+inline Load<void> load_palette { LoadTagDefault, []() {
+	std::string path(data_path("../assets/tiles.palette"));
+	std::ifstream palette_file(path);
+	if (!palette_file.is_open()) {
+		throw std::runtime_error("Cannot open palette file " + path);
+	}
+
+	read_chunk(palette_file, "pale", &PPU466::palette_table);
+	PPU466::DebugPrintPaletteTable(PPU466::palette_table.data()->data());
+} };

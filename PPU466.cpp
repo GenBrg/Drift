@@ -202,7 +202,6 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 	//Upload at to GPU using PPUDataStream:
 
 	{ //upload palette texture:
-		static_assert(sizeof(palette_table) == 4 * 4 * decltype(palette_table)().size(), "palette table is packed");
 		glBindTexture(GL_TEXTURE_2D, data_stream->palette_tex);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4, GLsizei(palette_table.size()), 0, GL_RGBA, GL_UNSIGNED_BYTE, palette_table.data());
 		glBindTexture(GL_TEXTURE_2D, 0);
