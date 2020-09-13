@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 #include <array>
+#include <iostream>
 
 struct PPU466 {
 	PPU466();
@@ -39,16 +40,39 @@ struct PPU466 {
 	glm::u8vec3 background_color = glm::u8vec3(0x00, 0x00, 0x00);
 
 	//Palette:
+	enum : uint32_t {
+		PaletteColorNum = 4,
+		PaletteTableNum = 8
+	};
+
 	// The PPU uses 4-bit indexed color.
 	// thus, a color palette has four entries:
-	typedef std::array< glm::u8vec4, 4 > Palette;
+	typedef std::array< glm::u8vec4, PaletteColorNum > Palette;
 	// for a "true NES" experience, you should set:
 	//   color 0 to fully transparent
 	//   and color 1-3 to fully opaque.
 
 	//Palette Table:
 	// The PPU stores 8 palettes for use when drawing tiles:
-	std::array< Palette, 8 > palette_table;
+	std::array< Palette, PaletteTableNum > palette_table;
+
+	static void DebugPrintPalette(const glm::u8vec4* palette) {
+		for (int i = 0; i < PaletteColorNum; ++i) {
+			std::cout << " " << static_cast<int>(palette[i].x) 
+					  << " " << static_cast<int>(palette[i].y) 
+					  << " " << static_cast<int>(palette[i].z) 
+					  << " " << static_cast<int>(palette[i].w) 
+					  << std::endl;
+		}
+	}
+
+	static void DebugPrintPaletteTable(const glm::u8vec4* palette_table) {
+		std::cout << "Palette table: " << std::endl;
+		for (int i = 0; i < PaletteTableNum; ++i) {
+			DebugPrintPalette(palette_table + i * PaletteColorNum);
+			std::cout << std::endl;
+		}
+	}
 
 	//Tile:
 	// The PPU uses 8x8 4-bit indexed-color tiles:
@@ -61,6 +85,13 @@ struct PPU466 {
 	//  bit0_at_2_7 = (tile.bit0[7] >> 2) & 1;
 	//  bit1_at_2_7 = (tile.bit1[7] >> 2) & 1;
 	//  color_index_at_2_7 = (bit1_at_2_7 << 1) | bit0_at_2_7;
+	enum : uint32_t {
+		TileWidth = 8,
+		TileHeight = 8,
+		TileTableWidth = 16,
+		TileTableHeight = 16
+	};
+
 	struct Tile {
 		std::array< uint8_t, 8 > bit0; //<-- controls bit 0 of the color index
 		std::array< uint8_t, 8 > bit1; //<-- controls bit 1 of the color index
@@ -70,7 +101,46 @@ struct PPU466 {
 	//Tile Table:
 	// The PPU has a 256-tile 'pattern memory' in which tiles are stored:
 	//  this is often thought of as a 16x16 grid of tiles.
-	std::array< Tile, 16 * 16 > tile_table;
+	std::array< Tile, TileTableWidth * TileTableHeight > tile_table;
+
+	static void SetTilePixel(Tile& tile, int x, int y, uint8_t color_idx) {
+		uint8_t bit0 = color_idx & 1;
+		uint8_t bit1 = (color_idx >> 1) & 1;
+
+		tile.bit0[y] = (tile.bit0[y] & ~(1 << x)) | (bit0 << x);
+		tile.bit1[y] = (tile.bit1[y] & ~(1 << x)) | (bit1 << x);
+	}
+
+	static uint8_t GetTilePixel(const Tile& tile, int x, int y) {
+		uint8_t bit0 = (tile.bit0[y] >> x) & 1;
+		uint8_t bit1 = (tile.bit1[y] >> x) & 1;
+
+		return (bit1 << 1) | bit0;
+	}
+
+	static void DebugPringTile(const Tile& tile) {
+		for (int y = TileHeight - 1; y >= 0; --y) {
+			for (int x = 0; x < TileWidth; ++x) {
+				std::cout << static_cast<int>(GetTilePixel(tile, x, y)) << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
+
+	static void DebugPrintTileMap(const Tile* tilemap, int num = TileTableWidth * TileTableHeight) {
+		std::cout << "Tile map: " << std::endl;
+		int processed = 0;
+		for (int i = 0; i < TileTableHeight; ++i) {
+			for (int j = 0; j < TileTableWidth; ++j) {
+				DebugPringTile(tilemap[i * TileTableWidth + j]);
+				std::cout << std::endl;
+				
+				if (++processed >= num) {
+					return;
+				}
+			}
+		}
+	}
 
 	//Background Layer:
 	// The PPU's background layer is made of 64x60 tiles (512 x 480 pixels):
@@ -83,8 +153,8 @@ struct PPU466 {
 	//  the origin of the grid (tile (0,0)) is the bottom left of the grid
 	//  each value in the grid gives:
 	//    - bits 0-7: tile table index
-	//    - bits 8-12: palette table index
-	//    - bits 13-15: unused, should be 0
+	//    - bits 8-10: palette table index
+	//    - bits 11-15: unused, should be 0
 	//
 	//  bits:  F E D C B A 9 8 7 6 5 4 3 2 1 0
 	//        |-------|-----|-----------------|

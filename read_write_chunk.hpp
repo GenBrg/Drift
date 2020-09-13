@@ -13,6 +13,7 @@
 
 template< typename T >
 void read_chunk(std::istream &from, std::string const &magic, std::vector< T > *to_) {
+	static_assert(std::is_pod<T>::value);
 	assert(to_);
 	auto &to = *to_;
 
@@ -44,6 +45,7 @@ void read_chunk(std::istream &from, std::string const &magic, std::vector< T > *
 //helper function to write a chunk of data in the same format as read_chunk:
 template< typename T >
 void write_chunk(std::string const &magic, std::vector< T > const &from, std::ostream *to_) {
+	static_assert(std::is_pod<T>::value);
 	assert(magic.size() == 4);
 	assert(to_);
 	auto &to = *to_;

@@ -1,16 +1,19 @@
-# (TODO: your game's title)
+# Drift
 
-Author: (TODO: your name)
+Author: Jiasheng Zhou \<jiashen2@andrew.cmu.edu\>
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: 
 
 Screen Shot:
 
 ![Screen Shot](screenshot.png)
 
-How Your Asset Pipeline Works:
+Asset Pipeline:
 
-(TODO: describe the steps in your asset pipeline, from source files to tiles/backgrounds/whatever you upload to the PPU466.)
+1. Authoring Tools: GIMP
+2. Use GIMP to create 128px * 128px tile map in png format: tiles.png
+3. Code that converts tiles.png to tiles.tile
+4. Runtime code that loads tiles into memory and upload it to PPU466
 
 How To Play:
 

@@ -5,7 +5,7 @@
 
 if $(OS) = NT { #Windows
 	NEST_LIBS = ..\\nest-libs\\windows ;
-	C++FLAGS = /nologo /Z7 /c /EHsc /W3 /WX /MD
+	C++FLAGS = /nologo /Z7 /c /EHsc /W3 /WX /MD /std:c++17
 		/I"$(NEST_LIBS)/SDL2/include"
 		/I"$(NEST_LIBS)/glm/include"
 		/I"$(NEST_LIBS)/libpng/include"
@@ -31,13 +31,13 @@ if $(OS) = NT { #Windows
 	NEST_LIBS = ../nest-libs/macos ;
 	C++ = clang++ ;
 	C++FLAGS =
-		-std=c++14 -g -Wall -Werror
+		-std=c++17 -g -Wall -Werror
 		`'$(NEST_LIBS)/SDL2/bin/sdl2-config' --prefix='$(NEST_LIBS)/SDL2' --cflags` #SDL2
 		-I$(NEST_LIBS)/glm/include                                                  #glm
 		-I$(NEST_LIBS)/libpng/include     
 		;
 	LINK = clang++ ;
-	LINKFLAGS = -std=c++14 -g -Wall -Werror ;
+	LINKFLAGS = -std=c++17 -g -Wall -Werror ;
 	LINKLIBS =
 		`'$(NEST_LIBS)/SDL2/bin/sdl2-config' --prefix='$(NEST_LIBS)/SDL2' --static-libs` -framework OpenGL #SDL2
 		-L$(NEST_LIBS)/libpng/lib -lpng                                                       #libpng
@@ -49,13 +49,13 @@ if $(OS) = NT { #Windows
 	NEST_LIBS = ../nest-libs/linux ;
 	C++ = g++ -no-pie ;
 	C++FLAGS =
-		-std=c++14 -g -Wall -Werror
+		-std=c++17 -g -Wall -Werror
 		`'$(NEST_LIBS)/SDL2/bin/sdl2-config' --prefix='$(NEST_LIBS)/SDL2' --cflags` #SDL2
 		-I$(NEST_LIBS)/glm/include                                                  #glm
 		-I$(NEST_LIBS)/libpng/include                                               #libpng
 		;
 	LINK = g++ -no-pie ;
-	LINKFLAGS = -std=c++14 -g -Wall -Werror ;
+	LINKFLAGS = -std=c++17 -g -Wall -Werror ;
 	LINKLIBS =
 		`'$(NEST_LIBS)/SDL2/bin/sdl2-config' --prefix='$(NEST_LIBS)/SDL2' --static-libs` -lGL #SDL2
 		-L$(NEST_LIBS)/libpng/lib -lpng                                                       #libpng
@@ -83,6 +83,8 @@ GAME_NAMES =
 
 LOCATE_TARGET = objs ; #put objects in 'objs' directory
 Objects $(GAME_NAMES:S=.cpp) ;
+Objects png_to_tilemap.cpp ;
 
 LOCATE_TARGET = dist ; #put main in 'dist' directory
 MainFromObjects game : $(GAME_NAMES:S=$(SUFOBJ)) ;
+MainFromObjects png_to_tilemap : png_to_tilemap$(SUFOBJ) PPU466$(SUFOBJ) load_save_png$(SUFOBJ) GL$(SUFOBJ) Load$(SUFOBJ) gl_compile_program$(SUFOBJ) ;
