@@ -65,26 +65,7 @@ Load< PPUDataStream > data_stream(LoadTagDefault);
 
 //-------------------------------------------------------------------
 
-PPU466::PPU466() {
-	for (auto &palette : palette_table) {
-		palette[0] = glm::u8vec4(0x00, 0x00, 0x00, 0x00);
-		palette[1] = glm::u8vec4(0x44, 0x44, 0x44, 0xff);
-		palette[2] = glm::u8vec4(0x99, 0x99, 0x99, 0xff);
-		palette[3] = glm::u8vec4(0xff, 0xff, 0xff, 0xff);
-	}
-
-	for (auto &tile : tile_table) {
-		tile.bit0 = { 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0 };
-		tile.bit1 = { 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff };
-	}
-
-	for (uint32_t i = 0; i < background.size(); ++i) {
-		background[i] = int16_t(
-			  (i % 8) << 8 //cycle through all palettes
-			| (i % palette_table.size()) //cycle through all tiles
-		);
-	}
-}
+PPU466::PPU466() { }
 
 void PPU466::draw(glm::uvec2 const &drawable_size) const {
 	//this code does screen scaling by manipulating the viewport, so save old values:
@@ -450,3 +431,23 @@ PPUDataStream::~PPUDataStream() {
 		palette_tex = 0;
 	}
 }
+
+static Load<void> load_tilemap { LoadTagDefault, []() {
+	std::string path(data_path("../assets/tiles.tile"));
+	std::ifstream tilemap_file(path);
+	if (!tilemap_file.is_open()) {
+		throw std::runtime_error("Cannot open tilemap file " + path);
+	}
+
+	read_chunk(tilemap_file, "tile", &PPU466::tile_table);
+} };
+
+static Load<void> load_palette { LoadTagDefault, []() {
+	std::string path(data_path("../assets/tiles.palette"));
+	std::ifstream palette_file(path);
+	if (!palette_file.is_open()) {
+		throw std::runtime_error("Cannot open palette file " + path);
+	}
+
+	read_chunk(palette_file, "pale", &PPU466::palette_table);
+} };

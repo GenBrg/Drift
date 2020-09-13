@@ -169,6 +169,10 @@ struct PPU466 {
 	//            '-------------------- unused (set to zero)
 	std::array< uint16_t, BackgroundWidth * BackgroundHeight > background;
 
+	static uint16_t MakeBackgroundValue(uint8_t tile_index, uint8_t palette_index) {
+		return tile_index | ((palette_index & 0x07) << 8);
+	}
+
 	//Background Position:
 	// The background's lower-left pixel can positioned anywhere
 	//   this can be used to "scroll the screen".
@@ -217,25 +221,3 @@ struct PPU466 {
 	std::array< Sprite, 64 > sprites;
 
 };
-
-inline Load<void> load_tilemap { LoadTagDefault, []() {
-	std::string path(data_path("../assets/tiles.tile"));
-	std::ifstream tilemap_file(path);
-	if (!tilemap_file.is_open()) {
-		throw std::runtime_error("Cannot open tilemap file " + path);
-	}
-
-	read_chunk(tilemap_file, "tile", &PPU466::tile_table);
-	PPU466::DebugPrintTileMap(PPU466::tile_table.data(), 10);
-} };
-
-inline Load<void> load_palette { LoadTagDefault, []() {
-	std::string path(data_path("../assets/tiles.palette"));
-	std::ifstream palette_file(path);
-	if (!palette_file.is_open()) {
-		throw std::runtime_error("Cannot open palette file " + path);
-	}
-
-	read_chunk(palette_file, "pale", &PPU466::palette_table);
-	PPU466::DebugPrintPaletteTable(PPU466::palette_table.data()->data());
-} };
