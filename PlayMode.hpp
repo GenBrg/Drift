@@ -57,8 +57,10 @@ struct PlayMode : Mode {
 	float slow_ocean_time { 0.0f };
 	float invulnerable_time { 0.0f };
 
-	uint32_t score { 0 };
-	uint8_t life { 3 };
+	uint16_t score { 0 };
+	uint16_t highest_score { 0 };
+	inline static constexpr uint8_t max_life { 5 };
+	uint8_t life { max_life };
 
 	std::deque<std::vector<BackgroundTile>> game_map;
 
@@ -82,4 +84,5 @@ struct PlayMode : Mode {
 	void CollideWith(int x, int y);
 	void GetItem(BackgroundTile::Item item);
 	void ApplyEffects(float elapsed_time);
+	void PrintScore(int start_sprite_idx, uint16_t score);
 };

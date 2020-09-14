@@ -32,8 +32,85 @@ PlayMode::PlayMode() {
 	}
 
 	ppu.background_position.x = 0;
+
+	// player sprite
 	ppu.sprites[0].index = 11;
 	ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
+
+	// lives sprite
+	ppu.sprites[1].index = 26;
+	ppu.sprites[1].attributes = PPU466::MakeSpriteAttributes(0, 2);
+	ppu.sprites[1].x = 32 * 8 - 4 * 8;
+	ppu.sprites[1].y = 241;
+	ppu.sprites[2].index = 26;
+	ppu.sprites[2].attributes = PPU466::MakeSpriteAttributes(0, 2);
+	ppu.sprites[2].x = 32 * 8 - 5 * 8;
+	ppu.sprites[2].y = 241;
+	ppu.sprites[3].index = 26;
+	ppu.sprites[3].attributes = PPU466::MakeSpriteAttributes(0, 2);
+	ppu.sprites[3].x = 32 * 8 - 6 * 8;
+	ppu.sprites[3].y = 241;
+	ppu.sprites[4].index = 26;
+	ppu.sprites[4].attributes = PPU466::MakeSpriteAttributes(0, 2);
+	ppu.sprites[4].x = 32 * 8 - 7 * 8;
+	ppu.sprites[4].y = 241;
+	ppu.sprites[5].index = 26;
+	ppu.sprites[5].attributes = PPU466::MakeSpriteAttributes(0, 2);
+	ppu.sprites[5].x = 32 * 8 - 8 * 8;
+	ppu.sprites[5].y = 241;
+
+	// score sprite
+	ppu.sprites[6].index = 1;
+	ppu.sprites[6].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[6].x = 24;
+	ppu.sprites[6].y = 29 * 8;
+
+	ppu.sprites[7].index = 1;
+	ppu.sprites[7].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[7].x = 24 - 1 * 4;
+	ppu.sprites[7].y = 29 * 8;
+
+	ppu.sprites[8].index = 1;
+	ppu.sprites[8].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[8].x = 24 - 2 * 4;
+	ppu.sprites[8].y = 29 * 8;
+
+	ppu.sprites[9].index = 1;
+	ppu.sprites[9].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[9].x = 24 - 3 * 4;
+	ppu.sprites[9].y = 29 * 8;
+
+	ppu.sprites[10].index = 1;
+	ppu.sprites[10].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[10].x = 24 - 4 * 4;
+	ppu.sprites[10].y = 29 * 8;
+
+
+	// highest score sprite
+	ppu.sprites[11].index = 1;
+	ppu.sprites[11].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[11].x = 128;
+	ppu.sprites[11].y = 29 * 8;
+
+	ppu.sprites[12].index = 1;
+	ppu.sprites[12].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[12].x = 128 - 1 * 4;
+	ppu.sprites[12].y = 29 * 8;
+
+	ppu.sprites[13].index = 1;
+	ppu.sprites[13].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[13].x = 128 - 2 * 4;
+	ppu.sprites[13].y = 29 * 8;
+
+	ppu.sprites[14].index = 1;
+	ppu.sprites[14].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[14].x = 128 - 3 * 4;
+	ppu.sprites[14].y = 29 * 8;
+
+	ppu.sprites[15].index = 1;
+	ppu.sprites[15].attributes = PPU466::MakeSpriteAttributes(0, 0);
+	ppu.sprites[15].x = 128 - 4 * 4;
+	ppu.sprites[15].y = 29 * 8;
 }
 
 PlayMode::~PlayMode() { }
@@ -86,6 +163,7 @@ void PlayMode::update(float elapsed) {
 	static float ocean_movement_y = 0;
 	ocean_movement_y += ocean_speed * elapsed;
 	int rows_to_update = static_cast<int32_t>(ocean_movement_y) / 8;
+	score += rows_to_update;
 
 	ocean_movement_y -= rows_to_update * 8.0f;
 	while (rows_to_update--) {
@@ -105,12 +183,7 @@ void PlayMode::update(float elapsed) {
 	// collision detection
 	int occupied_grid_x = static_cast<int32_t>(player_at.x / 8.0f);
 	int occupied_grid_y = static_cast<int32_t>((player_at.y + camera_y_pos) / 8.0f);
-	// ppu.sprites[1].x = static_cast<uint8_t>(occupied_grid_x * 8);
-	// ppu.sprites[1].y = static_cast<uint8_t>(occupied_grid_y * 8.0f - camera_y_pos);
-	// ppu.sprites[1].index = 1;
-	// ppu.sprites[1].attributes = PPU466::MakeSpriteAttributes(0, 0);
 
-	
 	ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
 	CollideWith(occupied_grid_x, occupied_grid_y);
 	CollideWith(occupied_grid_x + 1, occupied_grid_y);
@@ -121,6 +194,17 @@ void PlayMode::update(float elapsed) {
 	ApplyEffects(elapsed);
 
 	// draw overlay
+	PrintScore(11, score);
+	PrintScore(6, highest_score);
+
+	// draw lives
+	for (int i = 0; i < life; ++i) {
+		ppu.sprites[1 + i].y = 27 * 8;
+	}
+
+	for (int i = life; i < max_life; ++i) {
+		ppu.sprites[1 + i].y = 241;
+	}
 
 	//reset button press counters:
 	left.downs = 0;
@@ -285,6 +369,11 @@ void PlayMode::CollideWith(int x, int y) {
 				if (invulnerable_time == 0.0f) {
 					invulnerable_time = 3.0f;
 					--life;
+					if (life == 0) {
+						life = max_life;
+						highest_score = std::max(highest_score, score);
+						score = 0;
+					}
 				}
 			}
 		break;
@@ -297,29 +386,35 @@ void PlayMode::GetItem(BackgroundTile::Item item) {
 
 	switch (item) {
 		case Item::FAST_OCEAN:
+			score += 5;
 			ocean_speed = 20.0f;
 			fast_ocean_time = 5.0f;
 			slow_ocean_time = 0.0f;
 		break;
 		case Item::FAST_RAFT:
+			score++;
 			player_speed = 45.0f;
 			fast_raft_time = 5.0f;
 			slow_raft_time = 0.0f;
 		break;
 		case Item::SLOW_OCEAN:
+			score++;
 			ocean_speed = 5.0f;
 			slow_ocean_time = 5.0f;
 			fast_ocean_time = 0.0f;
 		break;
 		case Item::SLOW_RAFT:
+			score += 5;
 			player_speed = 20.0f;
 			slow_raft_time = 5.0f;
 			fast_raft_time = 0.0f;
 		break;
 		case Item::LIFE:
-			++life;
+			score += 10;
+			life = std::min(max_life, static_cast<uint8_t>(life + 1));
 		break;
 		case Item::INVULNERABLE_POTION:
+			score += 3;
 			invulnerable_time = 5.0f;
 		break;
 		default:;
@@ -359,5 +454,20 @@ void PlayMode::ApplyEffects(float elapsed_time) {
 		if (invulnerable_time == 0.0f) {
 			ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
 		}
+	}
+}
+
+void PlayMode::PrintScore(int start_sprite_idx, uint16_t score) {
+	int i = 0;
+	while (score > 0) {
+		int digit = score % 10;
+		ppu.sprites[start_sprite_idx + i].index = 1 + digit;
+		++i;
+		score /= 10;
+	}
+
+	while (i < 5) {
+		ppu.sprites[start_sprite_idx + i].index = 1;
+		++i;
 	}
 }
