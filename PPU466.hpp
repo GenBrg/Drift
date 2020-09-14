@@ -63,6 +63,7 @@ struct PPU466 {
 	inline static std::vector< Palette > palette_table {};
 
 	static void DebugPrintPalette(const glm::u8vec4* palette) {
+		#ifdef _DEBUG
 		for (int i = 0; i < PaletteColorNum; ++i) {
 			std::cout << " " << static_cast<int>(palette[i].x) 
 					  << " " << static_cast<int>(palette[i].y) 
@@ -70,14 +71,17 @@ struct PPU466 {
 					  << " " << static_cast<int>(palette[i].w) 
 					  << std::endl;
 		}
+		#endif
 	}
 
 	static void DebugPrintPaletteTable(const glm::u8vec4* palette_table) {
+		#ifdef _DEBUG
 		std::cout << "Palette table: " << std::endl;
 		for (int i = 0; i < PaletteTableNum; ++i) {
 			DebugPrintPalette(palette_table + i * PaletteColorNum);
 			std::cout << std::endl;
 		}
+		#endif
 	}
 
 	//Tile:
@@ -125,15 +129,18 @@ struct PPU466 {
 	}
 
 	static void DebugPringTile(const Tile& tile) {
+		#ifdef _DEBUG
 		for (int y = TileHeight - 1; y >= 0; --y) {
 			for (int x = 0; x < TileWidth; ++x) {
 				std::cout << static_cast<int>(GetTilePixel(tile, x, y)) << " ";
 			}
 			std::cout << std::endl;
 		}
+		#endif
 	}
 
 	static void DebugPrintTileMap(const Tile* tilemap, int num = TileTableWidth * TileTableHeight) {
+		#ifdef _DEBUG
 		std::cout << "Tile map: " << std::endl;
 		int processed = 0;
 		for (int i = 0; i < TileTableHeight; ++i) {
@@ -146,6 +153,7 @@ struct PPU466 {
 				}
 			}
 		}
+		#endif
 	}
 
 	//Background Layer:

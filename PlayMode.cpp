@@ -32,6 +32,8 @@ PlayMode::PlayMode() {
 	}
 
 	ppu.background_position.x = 0;
+	ppu.sprites[0].index = 11;
+	ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
 }
 
 PlayMode::~PlayMode() { }
@@ -101,8 +103,22 @@ void PlayMode::update(float elapsed) {
 	player_at.y = std::min(60 * 8.0f, std::max(0.0f, player_at.y));
 
 	// collision detection
+	int occupied_grid_x = static_cast<int32_t>(player_at.x / 8.0f);
+	int occupied_grid_y = static_cast<int32_t>((player_at.y + camera_y_pos) / 8.0f);
+	// ppu.sprites[1].x = static_cast<uint8_t>(occupied_grid_x * 8);
+	// ppu.sprites[1].y = static_cast<uint8_t>(occupied_grid_y * 8.0f - camera_y_pos);
+	// ppu.sprites[1].index = 1;
+	// ppu.sprites[1].attributes = PPU466::MakeSpriteAttributes(0, 0);
+
+	
+	ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
+	CollideWith(occupied_grid_x, occupied_grid_y);
+	CollideWith(occupied_grid_x + 1, occupied_grid_y);
+	CollideWith(occupied_grid_x, occupied_grid_y + 1);
+	CollideWith(occupied_grid_x + 1, occupied_grid_y + 1);
 
 	// apply item effects
+	ApplyEffects(elapsed);
 
 	// draw overlay
 
@@ -118,8 +134,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	// Draw player
 	ppu.sprites[0].x = static_cast<uint8_t>(player_at.x);
 	ppu.sprites[0].y = static_cast<uint8_t>(player_at.y);
-	ppu.sprites[0].index = 11;
-	ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
+	
 
 	// Upload game_map within the viewport to ppu
 	int lower_left_tile_y = static_cast<int32_t>(camera_y_pos) / 8;
@@ -241,11 +256,108 @@ uint16_t PlayMode::DrawTile(const BackgroundTile& tile) {
 }
 
 void PlayMode::DebugPrintMap() {
+	#ifdef _DEBUG
 	for (int i = 59; i >= 0; --i) {
 		for (int j = 0; j < 32; ++j) {
 			uint16_t tile = DrawTile(game_map[i][j]);
 			std::cout << static_cast<int32_t>(tile) << " ";
 		}
 		std::cout << std::endl;
+	}
+	#endif
+}
+
+void PlayMode::CollideWith(int x, int y) {
+	using Type = BackgroundTile::Type;
+	if (x < 0 || x > 31 || y < 0 || y > 59)
+		return;
+
+	switch (game_map[y][x].type) {
+		case Type::ITEM:
+			if (RectIntersectTest(player_at.x, player_at.y, 4.0f, 4.0f, x * 8.0f, y * 8.0f - camera_y_pos, 4.0f, 4.0f)) {
+				GetItem(static_cast<BackgroundTile::Item>(game_map[y][x].subid));
+				static std::uniform_int_distribution<int> ocean_dist(0, 3);
+				game_map[y][x] = { Type::OCEAN,  static_cast<uint8_t>(ocean_dist(mt)) };
+			}
+			break;
+		case Type::ROCK:
+			if (RectIntersectTest(player_at.x, player_at.y, 4.0f, 4.0f, x * 8.0f, y * 8.0f - camera_y_pos, 4.0f, 4.0f)) {
+				if (invulnerable_time == 0.0f) {
+					invulnerable_time = 3.0f;
+					--life;
+				}
+			}
+		break;
+		default:;
+	}
+}
+
+void PlayMode::GetItem(BackgroundTile::Item item) {
+	using Item = BackgroundTile::Item;
+
+	switch (item) {
+		case Item::FAST_OCEAN:
+			ocean_speed = 20.0f;
+			fast_ocean_time = 5.0f;
+			slow_ocean_time = 0.0f;
+		break;
+		case Item::FAST_RAFT:
+			player_speed = 45.0f;
+			fast_raft_time = 5.0f;
+			slow_raft_time = 0.0f;
+		break;
+		case Item::SLOW_OCEAN:
+			ocean_speed = 5.0f;
+			slow_ocean_time = 5.0f;
+			fast_ocean_time = 0.0f;
+		break;
+		case Item::SLOW_RAFT:
+			player_speed = 20.0f;
+			slow_raft_time = 5.0f;
+			fast_raft_time = 0.0f;
+		break;
+		case Item::LIFE:
+			++life;
+		break;
+		case Item::INVULNERABLE_POTION:
+			invulnerable_time = 5.0f;
+		break;
+		default:;
+	}
+
+	
+}
+
+void PlayMode::ApplyEffects(float elapsed_time) {
+	if (fast_ocean_time > 0.0f) {
+		fast_ocean_time = std::max(0.0f, fast_ocean_time - elapsed_time);
+		if (fast_ocean_time == 0.0f) {
+			ocean_speed = 10.0f;
+		}
+	} else if (slow_ocean_time > 0.0f) {
+		slow_ocean_time = std::max(0.0f, slow_ocean_time - elapsed_time);
+		if (slow_ocean_time == 0.0f) {
+			ocean_speed = 10.0f;
+		}
+	}
+
+	if (fast_raft_time > 0.0f) {
+		fast_raft_time = std::max(0.0f, fast_raft_time - elapsed_time);
+		if (fast_raft_time == 0.0f) {
+			player_speed = 30.0f;
+		}
+	} else if (slow_raft_time > 0.0f) {
+		slow_raft_time = std::max(0.0f, slow_raft_time - elapsed_time);
+		if (slow_raft_time == 0.0f) {
+			player_speed = 30.0f;
+		}
+	}
+
+	if (invulnerable_time > 0.0f) {
+		ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 6);
+		invulnerable_time = std::max(0.0f, invulnerable_time - elapsed_time);
+		if (invulnerable_time == 0.0f) {
+			ppu.sprites[0].attributes = PPU466::MakeSpriteAttributes(0, 3);
+		}
 	}
 }

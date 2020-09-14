@@ -29,7 +29,7 @@ struct PlayMode : Mode {
 	float camera_y_pos = 15 * 8.0f;
 
 	float player_speed { 30.0f };
-	float ocean_speed { 15.0f };
+	float ocean_speed { 10.0f };
 
 	struct BackgroundTile {
 		enum class Type : uint8_t {
@@ -71,4 +71,15 @@ struct PlayMode : Mode {
 	void GenerateNewRows();
 	uint16_t DrawTile(const BackgroundTile& tile);
 	void DebugPrintMap();
+	bool SegmentIntersectTest(float x1, float x2, float y1, float y2) {
+		return (x2 > y1) && (x1 < y2);
+	}
+	bool RectIntersectTest(float x1, float y1, float width1, float height1,
+							 float x2, float y2, float width2, float height2) {
+		return SegmentIntersectTest(x1, x1 + width1, x2, x2 + width2) &&
+				SegmentIntersectTest(y1, y1 + height1, y2, y2 + height2);
+	}
+	void CollideWith(int x, int y);
+	void GetItem(BackgroundTile::Item item);
+	void ApplyEffects(float elapsed_time);
 };
