@@ -26,11 +26,49 @@ struct PlayMode : Mode {
 
 	//player position:
 	glm::vec2 player_at = glm::vec2(0.0f);
+	float camera_y_pos = 15 * 8.0f;
 
 	float player_speed { 30.0f };
+	float ocean_speed { 15.0f };
+
+	struct BackgroundTile {
+		enum class Type : uint8_t {
+			OCEAN,
+			ROCK,
+			ITEM
+		};
+
+		enum class Item : uint8_t {
+			FAST_RAFT = 0,
+			SLOW_RAFT,
+			FAST_OCEAN,
+			SLOW_OCEAN,
+			LIFE,
+			INVULNERABLE_POTION
+		};
+
+		Type type;
+		uint8_t subid;
+	};
+
+	float fast_raft_time { 0.0f };
+	float slow_raft_time { 0.0f };
+	float fast_ocean_time { 0.0f };
+	float slow_ocean_time { 0.0f };
+	float invulnerable_time { 0.0f };
+
+	uint32_t score { 0 };
+	uint8_t life { 3 };
+
+	std::deque<std::vector<BackgroundTile>> game_map;
 
 	//----- drawing handled by PPU466 -----
 
 	PPU466 ppu;
 	std::mt19937 mt;
+
+	BackgroundTile GenerateNewTile();
+	void GenerateNewRows();
+	uint16_t DrawTile(const BackgroundTile& tile);
+	void DebugPrintMap();
 };

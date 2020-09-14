@@ -210,6 +210,10 @@ struct PPU466 {
 		uint8_t attributes = 0; //tile attribute bits
 	};
 	static_assert(sizeof(Sprite) == 4, "Sprite is a 32-bit value.");
+
+	static uint8_t MakeSpriteAttributes(uint8_t priority, uint8_t palette_index) {
+		return (priority << 7) | (palette_index & 0x07);
+	}
 	//
 	// The observant among you will notice that you can't draw a sprite moving off the left
 	//  or bottom edges of the screen. Yep! This is [similar to] a limitation of the NES PPU!
