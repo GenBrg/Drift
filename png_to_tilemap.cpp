@@ -55,6 +55,8 @@ int main(int argc, char* argv[]) {
         palette_table.push_back(std::move(palette));
     }
 
+    PPU466::DebugPrintPaletteTable(palette_table.data()->data());
+
     // Process each tile
     for (int i = 0; i < PPU466::TileTableHeight; ++i) {
         for (int j = 0; j < PPU466::TileTableWidth; ++j) {
@@ -63,16 +65,15 @@ int main(int argc, char* argv[]) {
             }
 
             PPU466::Tile& tile = tile_table[i * PPU466::TileTableWidth + j];
-            PPU466::Palette temp_palette {};
-            int next_color_idx = 0;
+            std::vector<glm::u8vec4> temp_palette {};
 
             // Gather all colors in the tile
             for (size_t row = i * PPU466::TileHeight; row < (i + 1) * PPU466::TileHeight; ++row) {
                 for (size_t col = j * PPU466::TileWidth; col < (j + 1) * PPU466::TileWidth; ++col) {
                     const glm::u8vec4& color = data[row * PPU466::TileWidth * PPU466::TileTableWidth + col];
                     if (std::find(temp_palette.begin(), temp_palette.end(), color) == temp_palette.end()) {
-                        temp_palette[next_color_idx++] = color;
-                        if (next_color_idx > 3) {
+                        temp_palette.push_back(color);
+                        if (temp_palette.size() > 4) {
                             std::cerr << "More than 4 colors appear in tile map (" << i << ", " << j << ")" << std::endl;
                             return -1;
                         }
@@ -90,6 +91,14 @@ int main(int argc, char* argv[]) {
 
                 for (const glm::u8vec4& color : temp_palette) {
                     if (std::find(palette.begin(), palette.end(), color) == palette.end()) {
+                        std::cout << "Not found" << std::endl;
+                        std::cout << " " << static_cast<int>(color.x) 
+                                    << " " << static_cast<int>(color.y) 
+                                    << " " << static_cast<int>(color.z) 
+                                    << " " << static_cast<int>(color.w) 
+                                    << std::endl;
+                        std::cout << "In: " << std::endl;
+                        PPU466::DebugPrintPalette(palette.data());
                         palette_match = false;
                         break;
                     }
@@ -102,11 +111,11 @@ int main(int argc, char* argv[]) {
             }
 
             if (palette_idx < 0) {
+                PPU466::DebugPrintPalette(temp_palette.data());
                 std::cerr << "Cannot find the palette for tile map (" << i << ", " << j << ")" << std::endl;
                 return -1;
             }
 
-            std::cout << palette_idx << std::endl;
             const PPU466::Palette& palette = palette_table[palette_idx];
 
             // Fill in the tile_table
@@ -122,7 +131,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    PPU466::DebugPrintPaletteTable(palette_table.data()->data());
+    
     PPU466::DebugPrintTileMap(tile_table.data(), 10);
 
     write_chunk("pale", palette_table, &palette_file);

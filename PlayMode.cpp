@@ -9,12 +9,25 @@
 #include <random>
 
 PlayMode::PlayMode() {
-	ppu.background_color = glm::u8vec4(0x00, 0xFF, 0x00, 0xff);
+	std::random_device r;
+	mt.seed(r());
+	std::uniform_int_distribution<int> ocean_tile(12, 15);
+
+	ppu.background_color = glm::u8vec4(0x00, 0x00, 0x00, 0xff);
+
+	int last_ocean_tile = 0;
 
 	for (int i = 0; i < PPU466::BackgroundHeight; ++i) {
 		for (int j = 0; j < PPU466::BackgroundWidth; ++j) {
 			int idx = i * PPU466::BackgroundWidth + j;
-			ppu.background[idx] = PPU466::MakeBackgroundValue(idx % 8, idx % 2);
+			int cur_ocean_tile = 0;
+
+			do {
+				cur_ocean_tile = PPU466::MakeBackgroundValue(ocean_tile(mt), 1);
+				ppu.background[idx] = cur_ocean_tile;
+			} while(cur_ocean_tile == last_ocean_tile);
+
+			last_ocean_tile = cur_ocean_tile;
 		}
 	}
 }

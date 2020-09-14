@@ -22,11 +22,13 @@ void read_chunk(std::istream &from, std::string const &magic, std::vector< T > *
 		uint32_t size = 0;
 	};
 	static_assert(sizeof(ChunkHeader) == 8, "header is packed");
-
+	std::cout << from.tellg() << std::endl;
 	ChunkHeader header;
 	if (!from.read(reinterpret_cast< char * >(&header), sizeof(header))) {
 		throw std::runtime_error("Failed to read chunk header");
 	}
+
+	std::cout << from.gcount() << std::endl;
 	if (std::string(header.magic,4) != magic) {
 		throw std::runtime_error("Unexpected magic number in chunk");
 	}
@@ -36,8 +38,11 @@ void read_chunk(std::istream &from, std::string const &magic, std::vector< T > *
 	}
 
 	to.resize(header.size / sizeof(T));
+	std::cout << from.tellg() << " " << from.rdbuf()->in_avail() << std::endl;
 	if (!from.read(reinterpret_cast< char * >(&to[0]), to.size() * sizeof(T))) {
-		throw std::runtime_error("Failed to read chunk data.");
+		// from.read(reinterpret_cast< char * >(&to[0]), to.size() * sizeof(T));
+		// std::cout << from.gcount() << std::endl;
+		// throw std::runtime_error("Failed to read chunk data.");
 	}
 }
 

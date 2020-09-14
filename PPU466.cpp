@@ -434,20 +434,22 @@ PPUDataStream::~PPUDataStream() {
 
 static Load<void> load_tilemap { LoadTagDefault, []() {
 	std::string path(data_path("../assets/tiles.tile"));
-	std::ifstream tilemap_file(path);
+	std::ifstream tilemap_file(path, std::ios::binary);
 	if (!tilemap_file.is_open()) {
 		throw std::runtime_error("Cannot open tilemap file " + path);
 	}
 
 	read_chunk(tilemap_file, "tile", &PPU466::tile_table);
+	PPU466::DebugPrintTileMap(PPU466::tile_table.data(), 10);
 } };
 
 static Load<void> load_palette { LoadTagDefault, []() {
 	std::string path(data_path("../assets/tiles.palette"));
-	std::ifstream palette_file(path);
+	std::ifstream palette_file(path, std::ios::binary);
 	if (!palette_file.is_open()) {
 		throw std::runtime_error("Cannot open palette file " + path);
 	}
-
+	
 	read_chunk(palette_file, "pale", &PPU466::palette_table);
+	PPU466::DebugPrintPaletteTable(PPU466::palette_table.data()->data());
 } };

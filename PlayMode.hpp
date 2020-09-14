@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <deque>
+#include <random>
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -31,4 +32,5 @@ struct PlayMode : Mode {
 	//----- drawing handled by PPU466 -----
 
 	PPU466 ppu;
+	std::mt19937 mt;
 };
