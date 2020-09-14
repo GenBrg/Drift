@@ -12,7 +12,7 @@ PlayMode::PlayMode() {
 	std::random_device r;
 	mt.seed(r());
 
-	ppu.background_color = glm::u8vec4(0x00, 0x00, 0x00, 0xff);
+	ppu.background_color = glm::u8vec4(0x2F, 0x1C, 0xEA, 0xFF);
 
 	GenerateNewRows();
 
@@ -81,6 +81,19 @@ void PlayMode::update(float elapsed) {
 	if (down.pressed) player_at.y -= player_speed * elapsed;
 	if (up.pressed) player_at.y += player_speed * elapsed;
 
+	static float ocean_movement_y = 0;
+	ocean_movement_y += ocean_speed * elapsed;
+	int rows_to_update = static_cast<int32_t>(ocean_movement_y) / 8;
+
+	ocean_movement_y -= rows_to_update * 8.0f;
+	while (rows_to_update--) {
+		game_map.pop_front();
+	}
+	GenerateNewRows();
+
+	camera_y_pos = 15 * 8.0f + ocean_movement_y;
+	player_at.y = std::max(0.0f, player_at.y - ocean_speed * elapsed);
+	
 	ppu.background_position.y = -static_cast<int32_t>(camera_y_pos);
 
 	// update ocean and items (scroll)

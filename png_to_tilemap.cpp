@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
     }
 
     
-    PPU466::DebugPrintTileMap(tile_table.data(), 10);
+    PPU466::DebugPrintPaletteTable(palette_table.data()->data());
 
     write_chunk("pale", palette_table, &palette_file);
     write_chunk("tile", tile_table, &tilemap_file);
