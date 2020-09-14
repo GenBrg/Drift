@@ -43,10 +43,10 @@ int main(int argc, char* argv[]) {
     std::vector<PPU466::Tile> tile_table(PPU466::TileTableWidth * PPU466::TileTableHeight, PPU466::Tile());
 
     // The first half in the first tile in the png is used to define palettes
-    for (int i = 0; i < PPU466::PaletteTableNum; ++i) {
+    for (unsigned int i = 0; i < PPU466::PaletteTableNum; ++i) {
         PPU466::Palette palette;
 
-        for (int j = 0; j < PPU466::PaletteColorNum; ++j) {
+        for (unsigned int j = 0; j < PPU466::PaletteColorNum; ++j) {
             int idx = i * PPU466::PaletteColorNum + j;
             const glm::u8vec4& color = data[(idx / PPU466::TileWidth) * PPU466::TileTableWidth * PPU466::TileWidth + idx % PPU466::TileHeight];
             palette[j] = color;
@@ -58,8 +58,8 @@ int main(int argc, char* argv[]) {
     PPU466::DebugPrintPaletteTable(palette_table.data()->data());
 
     // Process each tile
-    for (int i = 0; i < PPU466::TileTableHeight; ++i) {
-        for (int j = 0; j < PPU466::TileTableWidth; ++j) {
+    for (unsigned int i = 0; i < PPU466::TileTableHeight; ++i) {
+        for (unsigned int j = 0; j < PPU466::TileTableWidth; ++j) {
             if (i == 0 && j == 0) {
                 continue;
             }
@@ -85,27 +85,19 @@ int main(int argc, char* argv[]) {
             int palette_idx = -1;
             size_t palette_num = palette_table.size();
 
-            for (int i = 0; i < palette_num; ++i) {
+            for (size_t i = 0; i < palette_num; ++i) {
                 const PPU466::Palette& palette = palette_table[i];
                 bool palette_match = true;
 
                 for (const glm::u8vec4& color : temp_palette) {
                     if (std::find(palette.begin(), palette.end(), color) == palette.end()) {
-                        std::cout << "Not found" << std::endl;
-                        std::cout << " " << static_cast<int>(color.x) 
-                                    << " " << static_cast<int>(color.y) 
-                                    << " " << static_cast<int>(color.z) 
-                                    << " " << static_cast<int>(color.w) 
-                                    << std::endl;
-                        std::cout << "In: " << std::endl;
-                        PPU466::DebugPrintPalette(palette.data());
                         palette_match = false;
                         break;
                     }
                 }
 
                 if (palette_match) {
-                    palette_idx = i;
+                    palette_idx = static_cast<int>(i);
                     break;
                 }
             }
@@ -119,8 +111,8 @@ int main(int argc, char* argv[]) {
             const PPU466::Palette& palette = palette_table[palette_idx];
 
             // Fill in the tile_table
-            for (int y = 0; y < PPU466::TileHeight; ++y) {
-                for (int x = 0; x < PPU466::TileWidth; ++x) {
+            for (unsigned int y = 0; y < PPU466::TileHeight; ++y) {
+                for (unsigned int x = 0; x < PPU466::TileWidth; ++x) {
                     int row = i * PPU466::TileHeight + 7 - y;
                     int col = j * PPU466::TileWidth + x;
                     const glm::u8vec4& color = data[row * PPU466::TileWidth * PPU466::TileTableWidth + col];
